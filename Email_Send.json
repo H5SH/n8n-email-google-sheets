@@ -1,0 +1,166 @@
+{
+  "name": "Email Send",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "emails",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "keyValue": "={{ $('On form submission').item.json.ID }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        480,
+        40
+      ],
+      "id": "c9a4653d-56f9-4488-86c7-e90cb3191656",
+      "name": "Supabase",
+      "credentials": {
+        "supabaseApi": {
+          "id": "tZE5dv0mlakfoBmG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $json.sender_email }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.body }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        760,
+        40
+      ],
+      "id": "62c1ffee-9737-4448-9d93-c34826e075a4",
+      "name": "Gmail",
+      "webhookId": "2b827bcd-5842-4b66-8314-0a2845914015",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "x34Y4uTXEbBw7BPj",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Enter the Id of the mail you want to send",
+        "formDescription": "Enter the id of the email reply that you want to send, Note. it must match the id on supabase.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "ID",
+              "placeholder": "123456789",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        40
+      ],
+      "id": "722ea36c-91ac-46d1-91de-f4708101af61",
+      "name": "On form submission",
+      "webhookId": "04a847da-705e-421e-b63c-7f3d8be642b5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "emails",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $('On form submission').item.json.ID }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "sent",
+              "fieldValue": "={{true}}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1020,
+        40
+      ],
+      "id": "edeadfde-a379-45c9-add4-44ddda8bcf37",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "tZE5dv0mlakfoBmG",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Supabase": {
+      "main": [
+        [
+          {
+            "node": "Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gmail": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "On form submission": {
+      "main": [
+        [
+          {
+            "node": "Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "6cc9c267-ab81-44d6-8dfd-c0345ac36249",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89a01eb420aa6047bdf8f73d5978282777d9a33a0827054df7374427ad9e639c"
+  },
+  "id": "PFQSdFkXUCQl7g7L",
+  "tags": []
+}

@@ -1,0 +1,725 @@
+{
+  "name": "Email Filteration",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {
+          "readStatus": "unread"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -420,
+        -280
+      ],
+      "id": "aca41f35-7e2e-468a-bf03-c2ae4f58913d",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "x34Y4uTXEbBw7BPj",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.ATTACHMENT_0 = item.binary?.attachment_0;\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        -480
+      ],
+      "id": "70aabfc7-a2c1-4092-a4d3-a5b25f4cfe24",
+      "name": "file extension"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "cc8ac3b1-a5f4-4e74-a2bb-6edab07c438e",
+              "leftValue": "={{ $('file extension').item.json.ATTACHMENT_0.fileExtension }}",
+              "rightValue": "pdf",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        900,
+        -480
+      ],
+      "id": "58e11076-7e26-4120-a876-042e1304a0e0",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://ltdbyukwjvcxlhiajxqa.supabase.co/storage/v1/object/n8n/uploads/{{ $('Gmail Trigger').item.json.subject }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "={{ $('Gmail Trigger').item.json.subject }}",
+              "inputDataFieldName": "attachment_0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "id": "24ebac25-79ef-4008-a158-7495ad14685a",
+      "name": "Upload supbase storage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.1,
+      "position": [
+        660,
+        -620
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "tZE5dv0mlakfoBmG",
+          "name": "Supabase account"
+        },
+        "httpHeaderAuth": {
+          "id": "VD3SGbupMH8RpQu1",
+          "name": "Header Auth account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "attachment_0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        -600
+      ],
+      "id": "08c84a2b-e5fe-44cc-8f7b-792becfd03e8",
+      "name": "Extract from File",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an email responding Ai, You have to respond to the email based on the\nsubject: {{ $('MAIL FORMATTER').item.json.MAIL.email.subject }},\ntext: {{ $('MAIL FORMATTER').item.json.MAIL.email.text }},\nupload pdf which contains fallowing data: {{ $json.EXTRACTED ||  $('Extract from File')?.item?.json.text || \"no data\"}},\nthe name of the sender is: {{ $('MAIL FORMATTER').item.json.MAIL.sender.name }},\nthe email of the sender is: {{ $('MAIL FORMATTER').item.json.MAIL.sender.address }},\nthe email of the reciever is: {{ $('MAIL FORMATTER').item.json.MAIL.receiver.address }},\naccording to the fallowing json schema: \n{\n\"subject\": \"string\",\n\"text\": \"string\"\n},\nAt the end ALWAYS MARK the email as read using the tool: Mark Read.\n\n",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [
+        1640,
+        -400
+      ],
+      "id": "8f78857e-7804-4025-ab0d-6531f86086fb",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        1580,
+        -160
+      ],
+      "id": "1eb7a751-dd4c-4a91-bac7-b9f77845caa9",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "IwHzzqDlfjyxbIoB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "pdf-data",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "numpages",
+              "fieldValue": "={{ $json.numpages }}"
+            },
+            {
+              "fieldId": "numrender",
+              "fieldValue": "={{ $json.numrender }}"
+            },
+            {
+              "fieldId": "info",
+              "fieldValue": "={{ $json.info }}"
+            },
+            {
+              "fieldId": "text",
+              "fieldValue": "={{ $json.text }}"
+            },
+            {
+              "fieldId": "version",
+              "fieldValue": "={{ $json.version }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        1380,
+        -600
+      ],
+      "id": "1da02b99-5818-4c60-97b6-8d3589b2bd69",
+      "name": "Supabase1",
+      "credentials": {
+        "supabaseApi": {
+          "id": "tZE5dv0mlakfoBmG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "tableId": "emails",
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "subject",
+              "fieldValue": "={{ $json.output.subject }}"
+            },
+            {
+              "fieldId": "body",
+              "fieldValue": "={{ $json.output.body.replace(\"[Your Name]\", $('MAIL FORMATTER').item.json.MAIL.receiver.address).replace(\"[Your Position]\", \"\").replace(\"[Your Contact Information]\", '') }}"
+            },
+            {
+              "fieldId": "sender_email",
+              "fieldValue": "={{ $('MAIL FORMATTER').item.json.MAIL.sender.address }}"
+            },
+            {
+              "fieldId": "sender_name",
+              "fieldValue": "={{ $('MAIL FORMATTER').item.json.MAIL.sender.name }}"
+            },
+            {
+              "fieldId": "sent",
+              "fieldValue": "={{ false }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        2480,
+        -180
+      ],
+      "id": "7fc003af-e361-4919-8062-c199419ad39c",
+      "name": "Supabase2",
+      "credentials": {
+        "supabaseApi": {
+          "id": "tZE5dv0mlakfoBmG",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "{API_URL_HERE}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"instructions\": \"open the webpage, check‬ necessary boxes, and automatically download the expose\",\n    \"linkSelector\": \"a[href]\",\n    \"proxyConfiguration\": {\n        \"useApifyProxy\": true\n    },\n    \"removeElementsCssSelector\": \"script, style, noscript, path, svg, xlink\",\n    \"removeLinkUrls\": false,\n    \"saveSnapshots\": true,\n    \"startUrls\": [\n        {\n            \"url\": \"{{ $json['MAIL.email.urls'] }}\",\n            \"method\": \"GET\"\n        }\n    ],\n    \"useStructureOutput\": false\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1220,
+        -120
+      ],
+      "id": "51b11a88-d9a7-4b9e-85f2-89b5449404d5",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "batchSize": "=1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        820,
+        -140
+      ],
+      "id": "6e7a6072-7135-4963-9606-0eb254f5314a",
+      "name": "Loop Over Items1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "MAIL.email.urls",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        480,
+        -140
+      ],
+      "id": "99bbf281-3e27-430e-ac82-28fa9ad3216e",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.output }}",
+        "schemaType": "fromJson",
+        "jsonSchemaExample": "{\n  \"subject\": \"string\",\n  \"body\": \"string\"\n}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1,
+      "position": [
+        2120,
+        -300
+      ],
+      "id": "94aa6c0e-30e6-47cd-8f09-36894a0cf479",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        2040,
+        -80
+      ],
+      "id": "4ce06196-e73c-4b37-bce0-818598981648",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "IwHzzqDlfjyxbIoB",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.MAIL.email.urls }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "array",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "4e6de320-c4ed-4915-9732-b37c72b5abd1"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "6526fcd3-cfff-4fb3-87ac-8feaab86e73c",
+                    "leftValue": "={{ $json.headers['content-type'] }}",
+                    "rightValue": "multipart/mixed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "91f3bff4-9707-48a5-82e4-58b08501d6aa",
+                    "leftValue": "={{ $json.headers['content-type'] }}",
+                    "rightValue": "multipart/alternative",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        0,
+        -280
+      ],
+      "id": "18cfeb02-318b-45d4-9d12-14e0acf80c32",
+      "name": "File or url"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfunction extractUrlsFromHtml(html) {\n    const urls = [];\n    const regex = /<a\\s+(?:[^>]*?\\s+)?href=\"([^\"]*)\"/g;\n    let match;\n\n    while ((match = regex.exec(html)) !== null) {\n        urls.push(match[1]); // Extracted URL\n    }\n\n    return urls;\n}\n\nfor (const item of $input.all()) {\n  const urls = extractUrlsFromHtml($input.first().json.textAsHtml)\n  item.json.MAIL = {\n    sender: $input.first().json.from.value[0],\n    receiver: $input.first().json.to.value[0],\n    email: {\n      subject: $input.first().json.subject,\n      text: $input.first().json.text,\n      urls: urls\n    },\n    id: $input.first().json.id,\n    timestamp: $input.first().json.date\n  }  \n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        -280
+      ],
+      "id": "dd2812b6-92dc-41b8-9bf1-ef2f0701fc60",
+      "name": "MAIL FORMATTER"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.EXTRACTED = 'no data';\n  if($input.first().json.jsonAnswer){\n    item.json.EXTRACTED = $input.first().json.jsonAnswer;\n  }\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1280,
+        -300
+      ],
+      "id": "cef9746d-898b-4af4-afa0-7d9b1c9c3647",
+      "name": "Extracted Data"
+    },
+    {
+      "parameters": {
+        "operation": "markAsRead",
+        "messageId": "={{ $('MAIL FORMATTER').item.json.id }}"
+      },
+      "type": "n8n-nodes-base.gmailTool",
+      "typeVersion": 2.1,
+      "position": [
+        1840,
+        -160
+      ],
+      "id": "b3ce55c3-6dff-48f4-ab81-92ac9df8c625",
+      "name": "Mark Read",
+      "webhookId": "4de3fb7b-2bd2-4be6-98e2-e62efdecb3b3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "x34Y4uTXEbBw7BPj",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "MAIL FORMATTER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "file extension": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Upload supbase storage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extracted Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Supabase1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items1": {
+      "main": [
+        [
+          {
+            "node": "Extracted Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload supbase storage": {
+      "main": [
+        []
+      ]
+    },
+    "Supabase1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "Supabase2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File or url": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "file extension",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extracted Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MAIL FORMATTER": {
+      "main": [
+        [
+          {
+            "node": "File or url",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracted Data": {
+      "main": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase2": {
+      "main": [
+        []
+      ]
+    },
+    "Mark Read": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "afa16dc2-12ea-4bdf-a557-be86704536ff",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89a01eb420aa6047bdf8f73d5978282777d9a33a0827054df7374427ad9e639c"
+  },
+  "id": "Qen2dqYN0E27lCB8",
+  "tags": []
+}

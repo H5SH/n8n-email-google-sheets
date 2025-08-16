@@ -1,0 +1,322 @@
+{
+  "name": "google sheets",
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -120,
+        -140
+      ],
+      "id": "991824c1-0d4e-4f93-8dad-05d692b0b68c",
+      "name": "When clicking ‘Test workflow’"
+    },
+    {
+      "parameters": {
+        "url": "{API_URL_HERE}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        300,
+        -140
+      ],
+      "id": "d8b758b1-59be-46f8-97dd-4ea298708367",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "data.items[0].defaultDatasetId",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        500,
+        -140
+      ],
+      "id": "1b2f4e75-6d90-49e4-9913-b3396c088f54",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "url": "{API_URL_HERE}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        700,
+        -140
+      ],
+      "id": "6fa8ee25-62a9-41b0-a98f-6ca7a2f297c2",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "NAME, DESCRIPTION, PRICE,  PRICE_DESCRIPTION, ADDRESS, LATITUDE, LONGITUDE, CONTACT_NAME, CONTACT_PHONE_NO, CONTACT_CELL_PHONE_NO, COMPANY",
+        "include": "",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1140,
+        -140
+      ],
+      "id": "c1fe100e-173e-436d-9993-0df7d0d5645b",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Google Sheets1').item.json.spreadsheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Google Sheets1').item.json.sheets[0].properties.sheetId }}",
+          "mode": "id"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "['resultlist.realEstate'].price",
+              "displayName": "['resultlist.realEstate'].price",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "['resultlist.realEstate'].title",
+              "displayName": "['resultlist.realEstate'].title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.salutation",
+              "displayName": "['resultlist.realEstate'].contactDetails.salutation",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.firstname",
+              "displayName": "['resultlist.realEstate'].contactDetails.firstname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.lastname",
+              "displayName": "['resultlist.realEstate'].contactDetails.lastname",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.phoneNumber",
+              "displayName": "['resultlist.realEstate'].contactDetails.phoneNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.cellPhoneNumber",
+              "displayName": "['resultlist.realEstate'].contactDetails.cellPhoneNumber",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "['resultlist.realEstate'].contactDetails.company",
+              "displayName": "['resultlist.realEstate'].contactDetails.company",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        1360,
+        -140
+      ],
+      "id": "8334d320-0fd5-4c4c-bd54-de756673efb0",
+      "name": "Google Sheets",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GSB1zEbWPWH9sRFT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "spreadsheet",
+        "title": "={{ $now }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        80,
+        -140
+      ],
+      "id": "5e7ee723-aa2a-4c52-949c-537b58a24b1a",
+      "name": "Google Sheets1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "GSB1zEbWPWH9sRFT",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\n\nconst np = 'not found';\n\nfunction monthlyPrice(month){\n  return `value: ${month.value || np},\namortization rate: ${month.amortizationRate || np},\neffective interest rate: ${month.effectiveInterestRate || np}, \nloan Amount: ${month.loanAmount || np}`;\n}\n\nfunction price(price){\n  return [price.value || np, `${price.currency || np} ${price.marketingType || np} ${price.priceIntervalType || np}`];\n}\n\nfunction address(address){\n  return `${address.houseNumber || np} ${address.street || np} ${address.quarter || np} ${address.city || np}, ${address.postcode || np}`;\n}\n\nfunction contact_data(contact){\n  const name = `${contact.firstname} ${contact.lastname}`;\n  const phone_no = contact.phoneNumber || np; \n  const cell_phone_no = contact.cellPhoneNumber || np;\n  const company = contact.company || np;\n  return [name, phone_no, cell_phone_no, company];\n}\n\nfor (const item of $input.all()) {\n\n  item.json.ID = item.json['resultlist.realEstate'].id;\n  \n  item.json.MONTHLY_PRICE = monthlyPrice(item.json.monthlyRate);\n\n  const [_price, price_description ] = price(item.json['resultlist.realEstate'].price);\n  item.json.PRICE = _price;\n  item.json.PRICE_DESCRIPTION = price_description;\n\n  item.json.NAME = item.json['resultlist.realEstate'].title || np;\n\n  item.json.DESCRIPTION = item.json['resultlist.realEstate'].address.description.text || np;\n\n  item.json.ADDRESS = address(item.json['resultlist.realEstate'].address);\n\n  item.json.LATITUDE = item.json['resultlist.realEstate'].address.wgs84Coordinate?.latitude || np;\n\n  item.json.LONGITUDE = item.json['resultlist.realEstate'].address.wgs84Coordinate?.longitude || np;\n\n  const [name, phone_no, cell_no, company] = contact_data(item.json['resultlist.realEstate'].contactDetails);\n\n  item.json.CONTACT_NAME = name;\n  item.json.CONTACT_PHONE_NO = phone_no;\n  item.json.CONTACT_CELL_PHONE_NO = cell_no;\n  item.json.COMPANY = company;\n  \n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        920,
+        -140
+      ],
+      "id": "8ecb450a-3075-4107-b9e2-a1c0e7e54fdf",
+      "name": "Code"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When clicking ‘Test workflow’": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Google Sheets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets": {
+      "main": [
+        []
+      ]
+    },
+    "Google Sheets1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "5c690ee0-422f-4cef-8cc7-bbe60f595d9f",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "89a01eb420aa6047bdf8f73d5978282777d9a33a0827054df7374427ad9e639c"
+  },
+  "id": "F8mXVIBizRu5EAPu",
+  "tags": []
+}
